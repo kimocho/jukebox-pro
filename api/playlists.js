@@ -1,16 +1,15 @@
 import express from "express";
-const router = express.Router();
-export default router;
+const playlistsRouter = express.Router();
+export default playlistsRouter;
 
-import {
-  createPlaylist,
-  getPlaylistById,
-  getPlaylists,
-} from "#db/queries/playlists";
+import { createPlaylist, getPlaylistById, getPlaylists } from "#db/queries/playlists";
 import { createPlaylistTrack } from "#db/queries/playlists_tracks";
 import { getTracksByPlaylistId } from "#db/queries/tracks";
 
-router
+import requireUser from "#middleware/requireUser";
+playlistsRouter.use(requireUser);
+
+playlistsRouter
   .route("/")
   .get(async (req, res) => {
     const playlists = await getPlaylists();
@@ -27,7 +26,7 @@ router
     res.status(201).send(playlist);
   });
 
-router.param("id", async (req, res, next, id) => {
+playlistsRouter.param("id", async (req, res, next, id) => {
   const playlist = await getPlaylistById(id);
   if (!playlist) return res.status(404).send("Playlist not found.");
 
@@ -35,11 +34,11 @@ router.param("id", async (req, res, next, id) => {
   next();
 });
 
-router.route("/:id").get((req, res) => {
+playlistsRouter.route("/:id").get((req, res) => {
   res.send(req.playlist);
 });
 
-router
+playlistsRouter
   .route("/:id/tracks")
   .get(async (req, res) => {
     const tracks = await getTracksByPlaylistId(req.playlist.id);
